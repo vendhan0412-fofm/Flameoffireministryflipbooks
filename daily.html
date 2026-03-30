@@ -1,1 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Bible Verse</title>
+</head>
+<body style="text-align:center;font-family:Arial;">
 
+<h3>Today's Bible Verse</h3>
+
+<img id="verseImg" style="max-width:100%;height:auto;" />
+
+<script>
+const baseURL = "https://vendhan0412-fofm.github.io/Flameoffireministryflipbooks/Word-Of-Knowledge-Daily-Images/";
+
+let today = new Date();
+
+function load(date, back) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth()+1).padStart(2,'0');
+  const d = String(date.getDate()).padStart(2,'0');
+
+  const url = baseURL + `daily-${y}-${m}-${d}.jpg`;
+
+  const img = document.getElementById("verseImg");
+
+  const test = new Image();
+  test.onload = () => img.src = url;
+
+  test.onerror = () => {
+    if (back < 7) {
+      let prev = new Date(date);
+      prev.setDate(date.getDate() - 1);
+      load(prev, back+1);
+    }
+  };
+
+  test.src = url;
+}
+
+load(today,0);
+</script>
+
+</body>
+</html>
