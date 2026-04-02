@@ -25,17 +25,20 @@ function load(date, back) {
   const img = document.getElementById("verseImg");
 
   const test = new Image();
-  test.onload = () => img.src = url;
+
+  test.onload = () => img.src = url + "?t=" + new Date().getTime();
 
   test.onerror = () => {
     if (back < 7) {
       let prev = new Date(date);
       prev.setDate(date.getDate() - 1);
       load(prev, back+1);
+    } else {
+      img.alt = "No verse available";
     }
   };
 
-  test.src = url;
+  test.src = url + "?t=" + new Date().getTime();
 }
 
 load(today,0);
