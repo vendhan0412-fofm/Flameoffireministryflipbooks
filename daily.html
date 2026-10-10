@@ -1,49 +1,65 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Bible Verse</title>
+  <title>Today's Bible Verse</title>
 </head>
+
 <body style="text-align:center;font-family:Arial;">
 
-<h3 style="color:white;">
-  Today's Bible Verse
-</h3>
+<h3>Today's Bible Verse</h3>
 
-<img id="verseImg" style="max-width:100%;height:auto;" />
+<img id="verseImg"
+     style="max-width:100%;height:auto;"
+     alt="Loading Bible verse..." />
 
 <script>
 const baseURL = "https://vendhan0412-fofm.github.io/Flameoffireministryflipbooks/Word-Of-Knowledge-Daily-Images/";
 
-let today = new Date();
+const img = document.getElementById("verseImg");
 
 function load(date, back) {
   const y = date.getFullYear();
-  const m = String(date.getMonth()+1).padStart(2,'0');
-  const d = String(date.getDate()).padStart(2,'0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
 
-  const url = baseURL + `daily-${y}-${m}-${d}.jpeg`;
-  const img = document.getElementById("verseImg");
+  const filename = `daily-${y}-${m}-${d}`;
+  const extensions = [".jpeg", ".jpg"];
 
-  const test = new Image();
-
-  test.onload = () => img.src = url + "?t=" + new Date().getTime();
-
-  test.onerror = () => {
-    if (back < 7) {
-      let prev = new Date(date);
-      prev.setDate(date.getDate() - 1);
-      load(prev, back+1);
-    } else {
-      img.alt = "No verse available";
+  function tryExtension(index) {
+    if (index >= extensions.length) {
+      if (back < 7) {
+        const prev = new Date(date);
+        prev.setDate(prev.getDate() - 1);
+        load(prev, back + 1);
+      } else {
+        img.removeAttribute("src");
+        img.alt = "No verse image available for the last 7 days.";
+      }
+      return;
     }
-  };
 
-  test.src = url + "?t=" + new Date().getTime();
+    const url = baseURL + filename + extensions[index];
+    const test = new Image();
+
+    test.onload = () => {
+      img.src = url + "?t=" + Date.now();
+      img.alt = "Daily Bible Verse";
+    };
+
+    test.onerror = () => tryExtension(index + 1);
+
+    test.src = url + "?t=" + Date.now();
+  }
+
+  img.alt = "Loading Bible verse...";
+  tryExtension(0);
 }
 
-load(today,0);
+load(new Date(), 0);
 </script>
 
 </body>
 </html>
+```
