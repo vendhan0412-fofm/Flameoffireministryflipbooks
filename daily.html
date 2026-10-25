@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -18,48 +18,43 @@
 const baseURL = "https://vendhan0412-fofm.github.io/Flameoffireministryflipbooks/Word-Of-Knowledge-Daily-Images/";
 
 const img = document.getElementById("verseImg");
+const pointerURL = baseURL + "latest.txt";
 
-function load(date, back) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
+async function loadLatestImage() {
+  try {
+    const response = await fetch(pointerURL + "?t=" + Date.now());
 
-  const filename = `daily-${y}-${m}-${d}`;
-  const extensions = [".jpeg", ".jpg"];
-
-  function tryExtension(index) {
-    if (index >= extensions.length) {
-      if (back < 7) {
-        const prev = new Date(date);
-        prev.setDate(prev.getDate() - 1);
-        load(prev, back + 1);
-      } else {
-        img.removeAttribute("src");
-        img.alt = "No verse image available for the last 7 days.";
-      }
-      return;
+    if (!response.ok) {
+      throw new Error("Could not read latest.txt");
     }
 
-    const url = baseURL + filename + extensions[index];
+    const filename = (await response.text()).trim();
+
+    if (!/^daily-\d{4}-\d{2}-\d{2}\.(jpg|jpeg)$/i.test(filename)) {
+      throw new Error("Invalid filename in latest.txt");
+    }
+
+    const imageURL = baseURL + filename + "?t=" + Date.now();
     const test = new Image();
 
-    test.onload = () => {
-      img.src = url + "?t=" + Date.now();
+    test.onload = function () {
+      img.src = imageURL;
       img.alt = "Daily Bible Verse";
     };
 
-    test.onerror = () => tryExtension(index + 1);
+    test.onerror = function () {
+      img.alt = "The image listed in latest.txt could not be found.";
+    };
 
-    test.src = url + "?t=" + Date.now();
+    test.src = imageURL;
+
+  } catch (error) {
+    img.alt = "Unable to load the latest Bible verse image. Please check latest.txt.";
   }
-
-  img.alt = "Loading Bible verse...";
-  tryExtension(0);
 }
 
-load(new Date(), 0);
+loadLatestImage();
 </script>
 
 </body>
 </html>
-```
