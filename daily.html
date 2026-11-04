@@ -20,21 +20,34 @@ const baseURL = "https://vendhan0412-fofm.github.io/Flameoffireministryflipbooks
 const img = document.getElementById("verseImg");
 const pointerURL = baseURL + "latest.txt";
 
-async function loadLatestImage() {
-  try {
-    const response = await fetch(pointerURL + "?t=" + Date.now());
+function getTodayDate() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
 
-    if (!response.ok) {
-      throw new Error("Could not read latest.txt");
+  const year = parts.find(p => p.type === "year").value;
+  const month = parts.find(p => p.type === "month").value;
+  const day = parts.find(p => p.type === "day").value;
+
+  return `daily-${year}-${month}-${day}`;
+}
+
+function tryExtensions(filename, onFailure) {
+  const extensions = ["jpg", "jpeg"];
+  let index = 0;
+
+  function tryNext() {
+    if (index >= extensions.length) {
+      onFailure();
+      return;
     }
 
-    const filename = (await response.text()).trim();
+    const imageURL = baseURL + filename + "." + extensions[index] + "?t=" + Date.now();
+    index++;
 
-    if (!/^daily-\d{4}-\d{2}-\d{2}\.(jpg|jpeg)$/i.test(filename)) {
-      throw new Error("Invalid filename in latest.txt");
-    }
-
-    const imageURL = baseURL + filename + "?t=" + Date.now();
     const test = new Image();
 
     test.onload = function () {
@@ -42,18 +55,46 @@ async function loadLatestImage() {
       img.alt = "Daily Bible Verse";
     };
 
-    test.onerror = function () {
-      img.alt = "The image listed in latest.txt could not be found.";
-    };
+    test.onerror = tryNext;
 
     test.src = imageURL;
-
-  } catch (error) {
-    img.alt = "Unable to load the latest Bible verse image. Please check latest.txt.";
   }
+
+  tryNext();
 }
 
-loadLatestImage();
+async function loadDailyImage() {
+  const todayFilename = getTodayDate();
+
+  // First try today's image
+  tryExtensions(todayFilename, async function () {
+
+    // If today's image is missing, read latest.txt
+    try {
+      const response = await fetch(pointerURL + "?t=" + Date.now());
+
+      if (!response.ok) {
+        throw new Error("latest.txt not found");
+      }
+
+      const filename = (await response.text()).trim();
+
+      if (!/^daily-\d{4}-\d{2}-\d{2}$/i.test(filename)) {
+        throw new Error("Invalid filename");
+      }
+
+      // Try JPG and JPEG from latest.txt
+      tryExtensions(filename, function () {
+        img.alt = "Today's and fallback Bible verse images are unavailable.";
+      });
+
+    } catch (error) {
+      img.alt = "Unable to load today's Bible verse image.";
+    }
+  });
+}
+
+loadDailyImage();
 </script>
 
 </body>
